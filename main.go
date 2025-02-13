@@ -15,13 +15,15 @@ import (
 )
 
 func main() {
+	h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})
+	log := slog.New(h)
+	slog.SetDefault(log)
 
 	address := "127.0.0.1"
 	port := "8080"
 	tlsPort := "443"
 	keyFile := ""
 	certFile := ""
-	log := slog.Default()
 
 	m := GetMux()
 
@@ -39,7 +41,8 @@ func main() {
 	}
 	servers = append(servers, s)
 	go func() {
-		log.Info("Starting HTTP Server...")
+		log.Info("Starting HTTP Server",
+			"address", s.Addr)
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Error("error starting http server",
 				"error", err.Error())
@@ -47,7 +50,6 @@ func main() {
 	}()
 
 	if keyFile != "" && certFile != "" {
-		log.Info("Starting HTTPS Server..")
 		s := &http.Server{
 			Addr: fmt.Sprintf("%v:%v", address,
 				tlsPort),
@@ -60,6 +62,8 @@ func main() {
 		}
 		servers = append(servers, s)
 		go func() {
+			log.Info("Starting HTTPS Server",
+				"address", s.Addr)
 			err := s.ListenAndServeTLS(certFile, keyFile)
 			if err != nil && err != http.ErrServerClosed {
 				log.Error("Server error", "Error", err)
@@ -83,7 +87,7 @@ func main() {
 			defer cancel()
 			defer wg.Done()
 
-			log.Info("Shutting down server...", "Server", server.Addr)
+			log.Info("Shutting down server", "Server", server.Addr)
 			if err := server.Shutdown(ctx); err != nil {
 				log.Error("Server shutdown failed", "error", err)
 			}
@@ -102,7 +106,7 @@ func GetMux() http.Handler {
 	log.Debug("Setting handlers on Router")
 
 	mux := http.NewServeMux()
-	mux.Handle("/api/v1/read", http.HandlerFunc(handlers.MysqlReadHandler))
+	mux.Handle("/api/v1/temp", http.HandlerFunc(handlers.MysqlTempHandler))
 
 	// Middleware
 	m := handlers.LoggingMiddleware(mux)
