@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"flag"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -15,15 +16,16 @@ import (
 )
 
 func main() {
+	address := *flag.String("a", "127.0.0.1", "IPv4 address to serve on")
+	port := *flag.Int("p", 8080, "Port to serve on")
+	tlsPort := *flag.Int("tls", 4443, "TLS port to serve on")
+	keyFile := *flag.String("key", "", "Key file location")
+	certFile := *flag.String("cert", "", "Certificate location")
+	flag.Parse()
+
 	h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})
 	log := slog.New(h)
 	slog.SetDefault(log)
-
-	address := "127.0.0.1"
-	port := "8080"
-	tlsPort := "443"
-	keyFile := ""
-	certFile := ""
 
 	m := GetMux()
 
@@ -32,7 +34,7 @@ func main() {
 	// writes URLs directly into pages, will not support both protocols
 	var servers []*http.Server
 	s := &http.Server{
-		Addr:         fmt.Sprintf("%v:%v", address, port),
+		Addr:         fmt.Sprintf("%v:%d", address, port),
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,

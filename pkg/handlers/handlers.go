@@ -16,58 +16,21 @@ const (
 
 var (
 	log            *slog.Logger = slog.Default()
-	db             models.Database
+	homeDb         models.Database
 	tempInsertStmt *sql.Stmt
 )
-
-func LoggingMiddleware(h http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			err := r.ParseForm()
-			if err != nil {
-				log.Error("error in parse form",
-					"error", err)
-			}
-			log.Info("incoming request",
-				"request", fmt.Sprintf("%+v", r))
-			h.ServeHTTP(w, r)
-		})
-}
-
-func TestMiddleware(h http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println("Test")
-			h.ServeHTTP(w, r)
-		})
-}
-
-func RecoveryMiddleware(h http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				r := recover()
-				if r != nil {
-					log.Error("recovering",
-						"error", r)
-				}
-			}()
-
-			h.ServeHTTP(w, r)
-		})
-}
 
 // Room varchar255 temp float humidity float
 func MysqlTempHandler(w http.ResponseWriter, r *http.Request) {
 	// Ensure database and prepared statements are initialized
-	if db == nil {
-		d, err := models.NewMysqlDB(os.Getenv("DB_CONN"))
+	if homeDb == nil {
+		db, err := models.NewMysqlDB(os.Getenv("DB_CONN"))
 		if err != nil {
 			panic(err)
 		}
 
-		db = d
-		tempInsertStmt, err = db.PrepareStmt(insertTemp)
+		homeDb = db
+		tempInsertStmt, err = homeDb.PrepareStmt(insertTemp)
 		if err != nil {
 			panic(err)
 		}
