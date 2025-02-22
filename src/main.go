@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/flynnkc/home_db_microservice/pkg/handlers"
+	"github.com/flynnkc/home_db_microservice/src/pkg/handlers"
 )
 
 func main() {

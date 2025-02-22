@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/flynnkc/home_db_microservice/pkg/handlers/models"
+	"github.com/flynnkc/home_db_microservice/src/pkg/handlers/models"
 )
 
 const (
